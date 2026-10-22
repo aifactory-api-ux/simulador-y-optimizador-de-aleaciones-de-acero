@@ -1,0 +1,633 @@
+openapi: 3.1.0
+info:
+  title: API de Aleaciones
+  version: 1.0.0
+paths:
+  /health:
+    get:
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/calculos/cev:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ElementosAleacion"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultadoCalculoCEV"
+  /api/v1/optimize:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SolicitudOptimizacion"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultadoOptimizacion"
+  /api/v1/materiales-primas:
+    get:
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MateriaPrimaResponse"
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MateriaPrimaCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MateriaPrimaResponse"
+  /api/v1/materiales-primas/{materia_prima_id}:
+    put:
+      parameters:
+        - name: materia_prima_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MateriaPrimaUpdate"
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MateriaPrimaResponse"
+    delete:
+      parameters:
+        - name: materia_prima_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MensajeOperacion"
+        "409":
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /api/v1/materiales-primas/{materia_prima_id}/historial-precios:
+    get:
+      parameters:
+        - name: materia_prima_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/HistorialPreciosResponse"
+  /api/v1/precios/importar-csv:
+    post:
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                archivo:
+                  type: string
+                  format: binary
+              required:
+                - archivo
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResultadoImportacionPrecios"
+  /api/v1/aleaciones:
+    get:
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AleacionResponse"
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AleacionCreate"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AleacionResponse"
+  /api/v1/aleaciones/{aleacion_id}:
+    get:
+      parameters:
+        - name: aleacion_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AleacionResponse"
+  /api/v1/analiticas/resumen:
+    get:
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResumenAnaliticas"
+  /api/v1/analiticas/historico:
+    get:
+      responses:
+        "200":
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HistoricoAnaliticas"
+components:
+  schemas:
+    ElementosAleacion:
+      type: object
+      properties:
+        porcentaje_carbon:
+          type: number
+          minimum: 0
+        porcentaje_manganeso:
+          type: number
+          minimum: 0
+        porcentaje_cromo:
+          type: number
+          minimum: 0
+        porcentaje_molibdeno:
+          type: number
+          minimum: 0
+        porcentaje_vanadio:
+          type: number
+          minimum: 0
+        porcentaje_niquel:
+          type: number
+          minimum: 0
+        porcentaje_cobre:
+          type: number
+          minimum: 0
+      required:
+        - porcentaje_carbon
+        - porcentaje_manganeso
+        - porcentaje_cromo
+        - porcentaje_molibdeno
+        - porcentaje_vanadio
+        - porcentaje_niquel
+        - porcentaje_cobre
+    ResultadoCalculoCEV:
+      type: object
+      properties:
+        cev_calculado:
+          type: number
+        soldabilidad:
+          type: string
+          enum:
+            - Bajo
+            - Medio
+            - Alto
+      required:
+        - cev_calculado
+        - soldabilidad
+    RestriccionesOptimizacion:
+      type: object
+      properties:
+        cev_maximo:
+          type: number
+          exclusiveMaximum: 0.45
+          default: 0.45
+        margen_costo:
+          type: number
+          minimum: 0
+      required:
+        - cev_maximo
+    MaterialDisponibleOptimizacion:
+      type: object
+      properties:
+        materia_prima_id:
+          type: string
+        precio_actual:
+          type: number
+        porcentaje_carbon:
+          type: number
+        porcentaje_manganeso:
+          type: number
+        porcentaje_cromo:
+          type: number
+        porcentaje_molibdeno:
+          type: number
+        porcentaje_vanadio:
+          type: number
+        porcentaje_niquel:
+          type: number
+        porcentaje_cobre:
+          type: number
+      required:
+        - materia_prima_id
+        - precio_actual
+        - porcentaje_carbon
+        - porcentaje_manganeso
+        - porcentaje_cromo
+        - porcentaje_molibdeno
+        - porcentaje_vanadio
+        - porcentaje_niquel
+        - porcentaje_cobre
+    SolicitudOptimizacion:
+      type: object
+      properties:
+        elementos_objetivo:
+          $ref: "#/components/schemas/ElementosAleacion"
+        restricciones:
+          $ref: "#/components/schemas/RestriccionesOptimizacion"
+        materiales_disponibles:
+          type: array
+          items:
+            $ref: "#/components/schemas/MaterialDisponibleOptimizacion"
+      required:
+        - elementos_objetivo
+        - restricciones
+        - materiales_disponibles
+    ComposicionOptima:
+      type: object
+      properties:
+        materia_prima_id:
+          type: string
+        porcentaje_peso:
+          type: number
+      required:
+        - materia_prima_id
+        - porcentaje_peso
+    ResultadoOptimizacion:
+      type: object
+      properties:
+        cev_calculado:
+          type: number
+        soldabilidad:
+          type: string
+          enum:
+            - Bajo
+            - Medio
+            - Alto
+        coste_estimado:
+          type: number
+        composicion_optima:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComposicionOptima"
+      required:
+        - cev_calculado
+        - soldabilidad
+        - coste_estimado
+        - composicion_optima
+    MateriaPrimaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        tipo:
+          type: string
+        precio_actual:
+          type: number
+        unidad_medida:
+          type: string
+        fecha_actualizacion:
+          type: string
+          format: date-time
+      required:
+        - id
+        - nombre
+        - tipo
+        - precio_actual
+        - unidad_medida
+        - fecha_actualizacion
+    MateriaPrimaCreate:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        tipo:
+          type: string
+        precio_actual:
+          type: number
+        unidad_medida:
+          type: string
+      required:
+        - id
+        - nombre
+        - tipo
+        - precio_actual
+        - unidad_medida
+    MateriaPrimaUpdate:
+      type: object
+      properties:
+        nombre:
+          type: string
+        tipo:
+          type: string
+        precio_actual:
+          type: number
+        unidad_medida:
+          type: string
+      required:
+        - nombre
+        - tipo
+        - precio_actual
+        - unidad_medida
+    HistorialPreciosResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        materia_prima_id:
+          type: string
+        precio:
+          type: number
+        fecha_registro:
+          type: string
+          format: date-time
+      required:
+        - id
+        - materia_prima_id
+        - precio
+        - fecha_registro
+    ComposicionAleacionResponse:
+      type: object
+      properties:
+        aleacion_id:
+          type: string
+        materia_prima_id:
+          type: string
+        porcentaje_peso:
+          type: number
+      required:
+        - aleacion_id
+        - materia_prima_id
+        - porcentaje_peso
+    ComposicionAleacionCreate:
+      type: object
+      properties:
+        materia_prima_id:
+          type: string
+        porcentaje_peso:
+          type: number
+      required:
+        - materia_prima_id
+        - porcentaje_peso
+    AleacionResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        porcentaje_carbon:
+          type: number
+        porcentaje_manganeso:
+          type: number
+        porcentaje_cromo:
+          type: number
+        porcentaje_molibdeno:
+          type: number
+        porcentaje_vanadio:
+          type: number
+        porcentaje_niquel:
+          type: number
+        porcentaje_cobre:
+          type: number
+        cev_calculado:
+          type: number
+        soldabilidad:
+          type: string
+          enum:
+            - Bajo
+            - Medio
+            - Alto
+        coste_estimado:
+          type: number
+        composicion:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComposicionAleacionResponse"
+      required:
+        - id
+        - nombre
+        - porcentaje_carbon
+        - porcentaje_manganeso
+        - porcentaje_cromo
+        - porcentaje_molibdeno
+        - porcentaje_vanadio
+        - porcentaje_niquel
+        - porcentaje_cobre
+        - cev_calculado
+        - soldabilidad
+        - coste_estimado
+        - composicion
+    AleacionCreate:
+      type: object
+      properties:
+        id:
+          type: string
+        nombre:
+          type: string
+        porcentaje_carbon:
+          type: number
+        porcentaje_manganeso:
+          type: number
+        porcentaje_cromo:
+          type: number
+        porcentaje_molibdeno:
+          type: number
+        porcentaje_vanadio:
+          type: number
+        porcentaje_niquel:
+          type: number
+        porcentaje_cobre:
+          type: number
+        coste_estimado:
+          type: number
+        composicion:
+          type: array
+          items:
+            $ref: "#/components/schemas/ComposicionAleacionCreate"
+      required:
+        - id
+        - nombre
+        - porcentaje_carbon
+        - porcentaje_manganeso
+        - porcentaje_cromo
+        - porcentaje_molibdeno
+        - porcentaje_vanadio
+        - porcentaje_niquel
+        - porcentaje_cobre
+        - coste_estimado
+        - composicion
+    HealthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+      required:
+        - status
+        - timestamp
+    MensajeOperacion:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required:
+        - success
+        - message
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+      required:
+        - detail
+    ErrorImportacionPrecios:
+      type: object
+      properties:
+        fila:
+          type: integer
+        mensaje:
+          type: string
+      required:
+        - fila
+        - mensaje
+    ResultadoImportacionPrecios:
+      type: object
+      properties:
+        total_procesados:
+          type: integer
+        total_actualizados:
+          type: integer
+        total_errores:
+          type: integer
+        errores:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorImportacionPrecios"
+      required:
+        - total_procesados
+        - total_actualizados
+        - total_errores
+        - errores
+    ResumenAnaliticas:
+      type: object
+      properties:
+        total_materiales:
+          type: integer
+        total_aleaciones:
+          type: integer
+        cev_promedio:
+          type: number
+        coste_promedio:
+          type: number
+        coste_total:
+          type: number
+        aleaciones_bajo:
+          type: integer
+        aleaciones_medio:
+          type: integer
+        aleaciones_alto:
+          type: integer
+      required:
+        - total_materiales
+        - total_aleaciones
+        - cev_promedio
+        - coste_promedio
+        - coste_total
+        - aleaciones_bajo
+        - aleaciones_medio
+        - aleaciones_alto
+    HistoricoAnaliticas:
+      type: object
+      properties:
+        periodo:
+          type: string
+        total_aleaciones:
+          type: integer
+        cev_promedio:
+          type: number
+        coste_promedio:
+          type: number
+        coste_total:
+          type: number
+      required:
+        - periodo
+        - total_aleaciones
+        - cev_promedio
+        - coste_promedio
+        - coste_total
